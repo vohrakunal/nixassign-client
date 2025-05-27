@@ -7,6 +7,7 @@ import Login from "./views/public/Login";
 import type IRouter from "./interface/IRouter";
 function PrivateRouter({ children }: any) {
   const auth = Auth.checkAuth();
+  // const auth = true;
   auth ? <PrivateIndex /> : <Navigate to="/login" />;
   return <PrivateIndex />;
 }

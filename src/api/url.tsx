@@ -1,6 +1,6 @@
 const urls = {
   auth: {
-      login: "/user/login"
+      login: "/client/login"
   },
 }
 export default urls;

@@ -39,7 +39,7 @@ export default function Login() {
                             <FaUser size={30} color="#58327e" />
                         </div>
                         <h2  style={{color:"#58327e"}}>Welcome Back</h2>
-                        <p className="text-muted" style={{ fontSize: '0.9rem' }}>Please enter your credentials to login</p>
+                        <p className="text-muted" style={{ color:"#58327e",fontSize: '0.9rem' }}>Please enter your credentials to login</p>
                     </div>
 
                     <Form.Group className="mb-4">
