@@ -22,7 +22,7 @@ export default function Login() {
         await AuthService.login({ email: email, password: password }).then((res) => {
             if (res.status === 200) {
                 toast.success("Login Successfully")
-                localStorage.setItem("authKey", res.data)
+                localStorage.setItem("authKey", res.data.token)
                 navigate('/dashboard');
             }
         }).catch(err => {
