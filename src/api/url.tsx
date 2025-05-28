@@ -10,8 +10,13 @@ const urls = {
     updateInvigilator: "/client/updateInvigilator",
     deleteInvigilator: "/client/deleteInvigilator",
     resetPassword:"/client/invigilator/password/reset",
-    toggleStatus:"/client/invigilator/status"
-    
+    toggleStatus:"/client/invigilator/status" 
+  },
+
+  dashboard: {
+    getExamDetails: "/client/exam/details",
+    getAllUnmappedUsers: "/client/user/unmapped",
+    getAllMappedUsers: "/client/getAllMappedUserLean",
   }
 }
 export default urls;
