@@ -21,4 +21,11 @@ export class InvigilatorService {
     static async deleteInvigilator(id: string) {
         return await makeRequest(`${urls.invigilator.deleteInvigilator}/${id}`, RequestMethod.DELETE);
     }
+    static async resetPassword(id: string) {
+        return await makeRequest(`${urls.invigilator.resetPassword}/${id}`, RequestMethod.PUT);
+    }
+
+    static async  getInvigilatorStatus(id: string) {
+        return await makeRequest(`${urls.invigilator. getInvigilatorStatus}/${id}`, RequestMethod.PUT);
+    }
 }

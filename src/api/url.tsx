@@ -5,10 +5,13 @@ const urls = {
 
   invigilator: {
     getAllInvigilators: "/client/invigilators",
-    getInvigilatorById: "/client/invigilators",
+    getInvigilatorById: "/client/getInvigilatorById",
     createInvigilator: "/client/createInvigilator",
     updateInvigilator: "/client/updateInvigilator",
-    deleteInvigilator: "/client/deleteInvigilator"
+    deleteInvigilator: "/client/deleteInvigilator",
+    resetPassword:"/client/invigilator/password",
+    getInvigilatorStatus:"/client/invigilator/status"
+    
   }
 }
 export default urls;
