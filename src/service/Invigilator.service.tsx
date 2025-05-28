@@ -25,7 +25,7 @@ export class InvigilatorService {
         return await makeRequest(`${urls.invigilator.resetPassword}/${id}`, RequestMethod.PUT);
     }
 
-    static async  getInvigilatorStatus(id: string) {
-        return await makeRequest(`${urls.invigilator. getInvigilatorStatus}/${id}`, RequestMethod.PUT);
+    static async  toggleStatus(id: string) {
+        return await makeRequest(`${urls.invigilator. toggleStatus}/${id}`, RequestMethod.PUT);
     }
 }

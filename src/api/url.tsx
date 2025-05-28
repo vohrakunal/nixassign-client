@@ -9,8 +9,8 @@ const urls = {
     createInvigilator: "/client/createInvigilator",
     updateInvigilator: "/client/updateInvigilator",
     deleteInvigilator: "/client/deleteInvigilator",
-    resetPassword:"/client/invigilator/password",
-    getInvigilatorStatus:"/client/invigilator/status"
+    resetPassword:"/client/invigilator/password/reset",
+    toggleStatus:"/client/invigilator/status"
     
   }
 }

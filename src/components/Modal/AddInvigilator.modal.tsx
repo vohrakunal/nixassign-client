@@ -21,14 +21,14 @@ export default function AddInvigilatorModal(props: AddInvigilatorModalProps) {
     
   };
 
-  console.log(data);
   
   const createInvigilator = async () => {
     await InvigilatorService.createInvigilator(data)
       .then((res) => {
         if (res.status === 200) {
           toast.success("create invigilator successfully");
-          // getAllInvigilators();
+          props.reloadData();
+          props.handleClose();
         }
       })
       .catch((err) => {

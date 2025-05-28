@@ -1,30 +1,42 @@
-import React from 'react'
-import { Container, Nav, Navbar, NavDropdown } from 'react-bootstrap'
+import React from 'react';
+import { Container, Nav, Navbar, Button } from 'react-bootstrap';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 export default function Topbar() {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const isActive = (path: string) => location.pathname === path;
+
+  const getLinkClass = (path: string) =>
+    `nav-link px-3 ${isActive(path) ? 'border-bottom border-3 border-dark fw-semibold' : ''}`;
+
+  const handleLogout = () => {
+    localStorage.removeItem("authKey");
+    navigate('/login');
+  };
+
   return (
-    <Navbar expand="lg" className="bg-body-tertiary">
-      <Container>
-        <Navbar.Brand href="/dashboard">Nixassign</Navbar.Brand>
+    <Navbar expand="lg" className="bg-body-tertiary shadow-sm px-3">
+      <Container fluid>
+        <Navbar.Brand href="/dashboard" className="fw-bold">Nixassign</Navbar.Brand>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
-            <Nav.Link href="/dashboard">Dashboard</Nav.Link>
-            <Nav.Link href="/invigilator">Invigilator</Nav.Link>
-            {/* <NavDropdown title="Dropdown" id="basic-nav-dropdown">
-              <NavDropdown.Item href="#action/3.1">Action</NavDropdown.Item>
-              <NavDropdown.Item href="#action/3.2">
-                Another action
-              </NavDropdown.Item>
-              <NavDropdown.Item href="#action/3.3">Something</NavDropdown.Item>
-              <NavDropdown.Divider />
-              <NavDropdown.Item href="#action/3.4">
-                Separated link
-              </NavDropdown.Item>
-            </NavDropdown> */}
+            <Nav.Link href="/dashboard" className={getLinkClass('/dashboard')}>
+              Dashboard
+            </Nav.Link>
+            <Nav.Link href="/invigilator" className={getLinkClass('/invigilator')}>
+              Invigilator
+            </Nav.Link>
           </Nav>
+          <div className="ms-auto">
+            <Button variant="outline-danger" onClick={handleLogout}>
+              Logout
+            </Button>
+          </div>
         </Navbar.Collapse>
       </Container>
     </Navbar>
-  )
+  );
 }
