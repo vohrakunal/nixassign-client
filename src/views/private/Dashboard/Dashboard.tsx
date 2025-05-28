@@ -6,6 +6,7 @@ import { DashboardService } from "../../../service/Dashboard.service";
 import moment from "moment";
 import CustomToggle from "../../../components/Menu/CustomMenu";
 import { FaKey } from "react-icons/fa";
+import DropzoneModal from "../../../components/Modal/Dropzone.modal";
 
 export default function Dashboard() {
   const [key, setKey] = useState<any>("all_candidate");
@@ -22,6 +23,8 @@ export default function Dashboard() {
 
   const [unmappedUsers, setUnmappedUsers] = useState<any>([]);
   const [mappedUsers, setMappedUsers] = useState<any>([]);
+
+  const [showUploadCandidateModal, setShowUploadCandidateModal] = useState<boolean>(false);
 
   const getExamDetails = async () => {
     await DashboardService.getExamDetails()
@@ -159,7 +162,7 @@ export default function Dashboard() {
           <Card.Body>
             <Card.Title>Settings</Card.Title>
             <div className="d-flex justify-content-end gap-3">
-              <Button variant="secondary">Upload Csv</Button>
+              <Button variant="secondary" onClick={() => setShowUploadCandidateModal(true)}>Upload Candidate CSV</Button>
             </div>
           </Card.Body>
         </Card>
@@ -305,6 +308,11 @@ export default function Dashboard() {
           </Card.Body>
         </Card>
       </div>
+
+      <DropzoneModal
+        show={showUploadCandidateModal}
+        handleClose={() => setShowUploadCandidateModal(false)}
+      />
     </Container>
   );
 }
