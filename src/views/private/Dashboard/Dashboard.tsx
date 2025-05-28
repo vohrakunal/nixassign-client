@@ -7,6 +7,7 @@ import moment from "moment";
 import CustomToggle from "../../../components/Menu/CustomMenu";
 import { FaKey } from "react-icons/fa";
 import DropzoneModal from "../../../components/Modal/Dropzone.modal";
+import toast from "react-hot-toast";
 
 export default function Dashboard() {
   const [key, setKey] = useState<any>("all_candidate");
@@ -25,6 +26,8 @@ export default function Dashboard() {
   const [mappedUsers, setMappedUsers] = useState<any>([]);
 
   const [showUploadCandidateModal, setShowUploadCandidateModal] = useState<boolean>(false);
+
+  const [selectedStudentId, setSelectedStudentIds] = useState<string[]>([]);
 
   const getExamDetails = async () => {
     await DashboardService.getExamDetails()
@@ -64,16 +67,52 @@ export default function Dashboard() {
       });
   }
 
-  const tab_data = [
-    {
-      label: "All Candidates",
-      key: "all_candidates",
-    },
-    {
-      label: "Mapped Candidates",
-      key: "mapped_candidates",
-    },
-  ]
+  const handleMapSingleStudent = async (studentId: string) => {
+    await DashboardService.mapSingleStudent(studentId)
+      .then((res) => {
+        if (res.status === 200) {
+          toast.success("Student Mapped Successfully.")
+          getAllUnmappedUsers();
+          getAllMappedUsers();
+        }
+      })
+      .catch((err) => {
+        toast.error(err.response.data || err.response.data.message || "Something went wrong")
+      });
+  }
+
+  const handleMapMultiStudent = async () => {
+    await DashboardService.mapMultipleStudents({ students: selectedStudentId })
+      .then((res) => {
+        if (res.status === 200) {
+          toast.success("Students Mapped Successfully.");
+          getAllUnmappedUsers();
+          getAllMappedUsers();
+          setSelectedStudentIds([]);
+        }
+      })
+      .catch((err) => {
+        toast.error(err.response.data || err.response.data.message || "Something went wrong")
+      });
+  }
+
+  const handleResetMappedStudentPassword = async (studentId: string, email: string) => {
+await DashboardService.resetMappedStudentPassword(studentId, { email })
+      .then((res) => {
+        if (res.status === 200) {
+          toast.success("Password reset successfully.");
+        }
+      })
+      .catch((err) => {
+        toast.error(err.response.data || err.response.data.message || "Something went wrong")
+      });
+  }
+
+
+  const handleSelectAllStudents = () => {
+    const student_ids = unmappedUsers.map((user: any) => user._id);
+    setSelectedStudentIds(student_ids);
+  }
 
 
   useEffect(() => {
@@ -183,18 +222,41 @@ export default function Dashboard() {
               className="mb-3"
             >
               <Tab eventKey={"all_candidate"} title={"All Candidates"}>
-                <Form.Group className="mb-3">
-                  <Form.Control
-                    className="form-control w-25"
-                    type="text"
-                    placeholder="Search..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                  />
-                </Form.Group>
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                  <Form.Group className="mb-3">
+                    <Form.Control
+                      className="form-control w-100"
+                      type="text"
+                      placeholder="Search..."
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                    />
+                  </Form.Group>
+                  {selectedStudentId.length > 0 && (
+                    <Button
+                      variant="danger"
+                      onClick={handleMapMultiStudent}
+                    >
+                      Map Selected Students
+                    </Button>
+                  )}
+                </div>
+
                 <Table striped hover>
                   <thead>
                     <tr>
+                      <th>
+                        <Form.Check
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              handleSelectAllStudents();
+                            } else {
+                              setSelectedStudentIds([]);
+                            }
+                          }}
+                          checked={selectedStudentId.length === unmappedUsers.length && unmappedUsers.length > 0}
+                        />
+                      </th>
                       <th style={{ fontSize: 14 }}>Sr. No</th>
                       <th style={{ fontSize: 14 }}>Name</th>
                       <th style={{ fontSize: 14 }}>Email</th>
@@ -210,14 +272,28 @@ export default function Dashboard() {
                       ? unmappedUsers?.map((candidate: any, index: number) => {
                         return (
                           <tr>
+                            <td style={{ fontSize: 12 }}>
+                              <Form.Check
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setSelectedStudentIds([...selectedStudentId, candidate._id]);
+                                  } else {
+                                    setSelectedStudentIds(selectedStudentId.filter((id) => id !== candidate._id));
+                                  }
+                                }}
+                                checked={selectedStudentId.includes(candidate._id)}
+                              />
+                            </td>
                             <td style={{ fontSize: 12 }}>{index + 1}</td>
                             <td style={{ fontSize: 12 }}>{candidate?.name}</td>
                             <td style={{ fontSize: 12 }}>{candidate?.email}</td>
                             <td style={{ fontSize: 12 }}>{moment(candidate?.dob).format("DD-MM-YYYY")}</td>
                             <td style={{ fontSize: 12 }}>{candidate?.registrationNumber}</td>
-                            <td style={{ fontSize: 12 }}>{candidate?.gender || "--"}</td>
+                            <td className="text-capitalize" style={{ fontSize: 12 }}>{candidate?.gender || "--"}</td>
                             <td style={{ fontSize: 12 }}>
-                              <Button size="sm" variant="outline-success">Map this user</Button>
+                              <Button size="sm" variant={`${candidate?.isMapped ? "success" : "outline-success"}`} onClick={() => handleMapSingleStudent(candidate._id)} disabled={candidate?.isMapped}>
+                                {candidate?.isMapped ? "Already Mapped" : "Map this user"}
+                              </Button>
                             </td>
                           </tr>
                         );
@@ -258,7 +334,7 @@ export default function Dashboard() {
                             <td style={{ fontSize: 12 }}>{candidate?.student?.email}</td>
                             <td style={{ fontSize: 12 }}>{moment(candidate?.student?.dob).format("DD-MM-YYYY")}</td>
                             <td style={{ fontSize: 12 }}>{candidate?.student?.registrationNumber}</td>
-                            <td style={{ fontSize: 12 }}>{candidate?.student?.gender || "--"}</td>
+                            <td className="text-capitalize" style={{ fontSize: 12 }}>{candidate?.student?.gender || "--"}</td>
                             <td>
                               <Dropdown>
                                 <Dropdown.Toggle
@@ -271,7 +347,7 @@ export default function Dashboard() {
                                 </Dropdown.Toggle>
                                 <Dropdown.Menu>
                                   <Dropdown.Item
-                                  // onClick={() => resetPassword(invigilator?._id)}
+                                  onClick={() => handleResetMappedStudentPassword(candidate?.student?._id, candidate?.student?.email)}
                                   >
                                     <FaKey className="text-info" />
                                     <span className="text-secondary fs-12 ms-2">

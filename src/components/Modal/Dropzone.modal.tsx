@@ -10,6 +10,8 @@ import {
     Tab
 } from 'react-bootstrap';
 import { FiUpload } from 'react-icons/fi';
+import { DashboardService } from '../../service/Dashboard.service';
+import toast from 'react-hot-toast';
 
 interface DropzoneModalProps {
     show: boolean;
@@ -22,22 +24,60 @@ export default function DropzoneModal({ show, handleClose }: DropzoneModalProps)
     const [fileName, setFileName] = useState<string>('');
     const [uploading, setUploading] = useState<boolean>(false);
 
-    const simulateUpload = (file: File) => {
+
+    const handleUploadedZip = async (files: File[]) => {
+        if (!files || files.length === 0) return;
+
+        const file = files[0];
         setUploading(true);
         setFileName(file.name);
-        let progress = 0;
+        setUploadProgress(0);
 
-        const interval = setInterval(() => {
-            progress += 5;
-            setUploadProgress(progress);
-            if (progress >= 100) {
-                clearInterval(interval);
-                setTimeout(() => {
-                    setUploading(false);
-                }, 1000);
-            }
-        }, 200);
+        try {
+            await DashboardService.uploadZipStudentData(file, (progressEvent) => {
+                const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                setUploadProgress(percent);
+            });
+
+            toast.success("Upload Complete");
+            setTimeout(() => {
+                setUploading(false);
+                handleClose();
+            }, 1000);
+        } catch (err) {
+            console.error(err);
+            toast.error("Something went wrong");
+            setUploading(false);
+        }
     };
+
+    const handleUploadedCSV = async (files: File[]) => {
+        if (!files || files.length === 0) return;
+
+        const file = files[0];
+        setUploading(true);
+        setFileName(file.name);
+        setUploadProgress(0);
+
+        try {
+            await DashboardService.uploadCSVStudentData(file, (progressEvent) => {
+                const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                setUploadProgress(percent);
+            });
+
+            toast.success("Upload Complete");
+            setTimeout(() => {
+                setUploading(false);
+                handleClose();
+            }, 1000);
+        } catch (err) {
+            console.error(err);
+            toast.error("Something went wrong");
+            setUploading(false);
+        }
+    };
+
+
 
     const createDropzone = (acceptedType: 'csv' | 'zip') => {
         return useDropzone({
@@ -47,12 +87,14 @@ export default function DropzoneModal({ show, handleClose }: DropzoneModalProps)
                     const isValid =
                         (acceptedType === 'csv' && file.name.endsWith('.csv')) ||
                         (acceptedType === 'zip' && file.name.endsWith('.zip'));
-
                     if (isValid) {
-                        simulateUpload(file);
-                    } else {
-                        alert(`Please upload a valid ${acceptedType.toUpperCase()} file.`);
+                        if (acceptedType === 'zip') {
+                            handleUploadedZip(acceptedFiles);
+                        } else {
+                            handleUploadedCSV(acceptedFiles);
+                        }
                     }
+
                 }
             }, []),
             accept: acceptedType === 'csv' ? { 'text/csv': ['.csv'] } : { 'application/zip': ['.zip'] },

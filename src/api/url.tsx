@@ -17,6 +17,11 @@ const urls = {
     getExamDetails: "/client/exam/details",
     getAllUnmappedUsers: "/client/user/unmapped",
     getAllMappedUsers: "/client/getAllMappedUserLean",
+    uploadZipStudentData: "/client/uploadZipUserData",
+    uploadCSVStudentData: "/client/uploadUserCsvData",
+    mapSingleStudent: "/client/user/map",
+    mapMultipleStudents: "/client/user/map-multiple",
+    resetMappedStudentPassword: "/client/user/reset-password"
   }
 }
 export default urls;
