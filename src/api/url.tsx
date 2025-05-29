@@ -22,7 +22,9 @@ const urls = {
     uploadCSVStudentData: "/client/uploadUserCsvData",
     mapSingleStudent: "/client/user/map",
     mapMultipleStudents: "/client/user/map-multiple",
-    resetMappedStudentPassword: "/client/user/reset-password"
+    resetMappedStudentPassword: "/client/user/reset-password",
+    toggleStudentMapping: "/client/toggleStudentMapping",
+    unMarkCompletedMapping:"/client/unMarkCompletedMapping"
   }
 }
 export default urls;

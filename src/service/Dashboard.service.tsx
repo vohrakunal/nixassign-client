@@ -61,5 +61,11 @@ export class DashboardService {
         return await makeRequest(urls.dashboard.resetMappedStudentPassword, RequestMethod.PUT, payload);
     }
 
-
+    static async toggleStatus(mappingId: string){
+        return await makeRequest(urls.dashboard.toggleStudentMapping + "/" + mappingId, RequestMethod.PUT);
+    }
+    
+    static async unmarkCompleted(mappingId: string){
+        return await makeRequest(urls.dashboard.unMarkCompletedMapping + "/" + mappingId, RequestMethod.PUT);
+    }
 }

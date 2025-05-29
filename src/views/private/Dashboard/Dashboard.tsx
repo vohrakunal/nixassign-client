@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from "react";
-import { Badge, Button, Card, Container, Dropdown, Form, Tab, Table, Tabs } from "react-bootstrap";
-import { FaCircleDot, FaEllipsisVertical, FaGears } from "react-icons/fa6";
+import { Badge, Button, Card, Container, Dropdown, Form, OverlayTrigger, Tab, Table, Tabs, Tooltip } from "react-bootstrap";
+import { FaCircleDot, FaEllipsisVertical, FaGears, FaXmark } from "react-icons/fa6";
 import TablePagination from "../../../components/Pagination/Table.pagination";
 import { DashboardService } from "../../../service/Dashboard.service";
 import moment from "moment";
 import CustomToggle from "../../../components/Menu/CustomMenu";
-import { FaKey } from "react-icons/fa";
+import { FaCheck, FaKey, FaLock, FaPlus, FaPlusCircle, FaUnlock } from "react-icons/fa";
 import DropzoneModal from "../../../components/Modal/Dropzone.modal";
 import toast from "react-hot-toast";
 import ResetPasswordModal from "../../../components/Modal/ResetPassword.modal";
+import BooleanIcon from "../../../components/BooleanIcon";
 
 export default function Dashboard() {
   const [key, setKey] = useState<any>("all_candidate");
@@ -30,6 +31,7 @@ export default function Dashboard() {
 
   const [selectedStudentId, setSelectedStudentIds] = useState<string[]>([]);
   const [showResetPasswordModal, setShowResetPasswordModal] = useState<any>(null);
+  const [loading, setLoading] = useState<boolean>(false);
 
   const getExamDetails = async () => {
     await DashboardService.getExamDetails()
@@ -44,6 +46,7 @@ export default function Dashboard() {
   }
 
   const getAllUnmappedUsers = async () => {
+    setLoading(true);
     await DashboardService.getAllUnmappedUsers(pageNumber, pageSize, search)
       .then((res) => {
         if (res.status === 200) {
@@ -53,10 +56,14 @@ export default function Dashboard() {
       })
       .catch((err) => {
         console.error("Error fetching unmapped users:", err);
+      })
+      .finally(() => {
+        setLoading(false);
       });
   }
 
   const getAllMappedUsers = async () => {
+    setLoading(true);
     await DashboardService.getAllMappedUsers(mappedPageNumber, mappedPageSize)
       .then((res) => {
         if (res.status === 200) {
@@ -66,6 +73,9 @@ export default function Dashboard() {
       })
       .catch((err) => {
         console.error("Error fetching unmapped users:", err);
+      })
+      .finally(() => {
+        setLoading(false);
       });
   }
 
@@ -99,11 +109,37 @@ export default function Dashboard() {
   }
 
   const handleResetMappedStudentPassword = async (studentId: string, email: string) => {
-await DashboardService.resetMappedStudentPassword(studentId, { email })
+    await DashboardService.resetMappedStudentPassword(studentId, { email })
       .then((res) => {
         if (res.status === 200) {
           toast.success("Password reset successfully.");
           setShowResetPasswordModal({ email, password: res.data.password });
+        }
+      })
+      .catch((err) => {
+        toast.error(err.response.data || err.response.data.message || "Something went wrong")
+      });
+  }
+
+  async function handleDisable(studentId: string) {
+    await DashboardService.toggleStatus(studentId)
+      .then((res) => {
+        if (res.status === 200) {
+          toast.success("User status updated successfully.");
+          getAllMappedUsers();
+        }
+      })
+      .catch((err) => {
+        toast.error(err.response.data || err.response.data.message || "Something went wrong")
+      });
+  }
+
+  async function handleUnmarkCompleted(mappingId: string) {
+    await DashboardService.unmarkCompleted(mappingId)
+      .then((res) => {
+        if (res.status === 200) {
+          toast.success("Unmarked as completed successfully.");
+          getAllMappedUsers();
         }
       })
       .catch((err) => {
@@ -271,36 +307,46 @@ await DashboardService.resetMappedStudentPassword(studentId, { email })
 
                   </thead>
                   <tbody>
-                    {unmappedUsers && unmappedUsers?.length > 0
-                      ? unmappedUsers?.map((candidate: any, index: number) => {
-                        return (
-                          <tr>
-                            <td style={{ fontSize: 12 }}>
-                              <Form.Check
-                                onChange={(e) => {
-                                  if (e.target.checked) {
-                                    setSelectedStudentIds([...selectedStudentId, candidate._id]);
-                                  } else {
-                                    setSelectedStudentIds(selectedStudentId.filter((id) => id !== candidate._id));
-                                  }
-                                }}
-                                checked={selectedStudentId.includes(candidate._id)}
-                              />
-                            </td>
-                            <td style={{ fontSize: 12 }}>{index + 1}</td>
-                            <td style={{ fontSize: 12 }}>{candidate?.name}</td>
-                            <td style={{ fontSize: 12 }}>{candidate?.email}</td>
-                            <td style={{ fontSize: 12 }}>{moment(candidate?.dob).format("DD-MM-YYYY")}</td>
-                            <td style={{ fontSize: 12 }}>{candidate?.registrationNumber}</td>
-                            <td className="text-capitalize" style={{ fontSize: 12 }}>{candidate?.gender || "--"}</td>
-                            <td style={{ fontSize: 12 }}>
-                              <Button size="sm" variant={`${candidate?.isMapped ? "success" : "outline-success"}`} onClick={() => handleMapSingleStudent(candidate._id)} disabled={candidate?.isMapped}>
-                                {candidate?.isMapped ? "Already Mapped" : "Map this user"}
-                              </Button>
-                            </td>
-                          </tr>
-                        );
-                      }) : "No data found"}
+                    {
+                      loading ? (
+                        <tr>
+                          <td colSpan={8} className="text-center">
+                            <div className="spinner-border text-primary" role="status">
+                              <span className="visually-hidden">Loading...</span>
+                            </div>
+                          </td>
+                        </tr>
+                      ) :
+                        (unmappedUsers && unmappedUsers?.length > 0)
+                          ? unmappedUsers?.map((candidate: any, index: number) => {
+                            return (
+                              <tr>
+                                <td style={{ fontSize: 12 }}>
+                                  <Form.Check
+                                    onChange={(e) => {
+                                      if (e.target.checked) {
+                                        setSelectedStudentIds([...selectedStudentId, candidate._id]);
+                                      } else {
+                                        setSelectedStudentIds(selectedStudentId.filter((id) => id !== candidate._id));
+                                      }
+                                    }}
+                                    checked={selectedStudentId.includes(candidate._id)}
+                                  />
+                                </td>
+                                <td style={{ fontSize: 12 }}>{index + 1}</td>
+                                <td style={{ fontSize: 12 }}>{candidate?.name}</td>
+                                <td style={{ fontSize: 12 }}>{candidate?.email}</td>
+                                <td style={{ fontSize: 12 }}>{moment(candidate?.dob).format("DD-MM-YYYY")}</td>
+                                <td style={{ fontSize: 12 }}>{candidate?.registrationNumber}</td>
+                                <td className="text-capitalize" style={{ fontSize: 12 }}>{candidate?.gender || "--"}</td>
+                                <td style={{ fontSize: 12 }}>
+                                  <Button size="sm" variant={`${candidate?.isMapped ? "success" : "outline-success"}`} onClick={() => handleMapSingleStudent(candidate._id)} disabled={candidate?.isMapped}>
+                                    {candidate?.isMapped ? "Already Mapped" : "Map this user"}
+                                  </Button>
+                                </td>
+                              </tr>
+                            );
+                          }) : "No data found"}
                   </tbody>
                 </Table>
                 <div className="mt-3">
@@ -317,60 +363,157 @@ await DashboardService.resetMappedStudentPassword(studentId, { email })
                 <Table striped hover>
                   <thead>
                     <tr>
-                      <th style={{ fontSize: 14 }}>Sr. No</th>
-                      <th style={{ fontSize: 14 }}>Name</th>
-                      <th style={{ fontSize: 14 }}>Email</th>
-                      <th style={{ fontSize: 14 }}>DOB</th>
-                      <th style={{ fontSize: 14 }}>Reg. No.</th>
-                      <th style={{ fontSize: 14 }}>Gender</th>
-                      <th style={{ fontSize: 14 }}>Action</th>
+                      <th>Sr. No.</th>
+                      <th className='text-nowrap'>Username/Reg. No.</th>
+                      {/* <th className='w-auto'>DOB</th> */}
+                      <th className='text-center'>Invigilator</th>
+                      <th className='text-center'>Student Submission</th>
+                      <th className='text-center'>Invigilator Submission</th>
+                      <th className='text-center'>Completed</th>
+                      <th className='text-center'>Mapping Status</th>
+                      <th style={{ fontSize: 10 }}> Attempted / Approved / Attempted but Unapproved / Review</th>
+                      <th>Certificate</th>
+                      <th className='text-nowrap'>Lock/Un-Lock</th>
                     </tr>
 
                   </thead>
                   <tbody>
-                    {mappedUsers && mappedUsers?.length > 0
-                      ? mappedUsers?.map((candidate: any, index: number) => {
-                        return (
-                          <tr>
-                            <td style={{ fontSize: 12 }}>{index + 1}</td>
-                            <td style={{ fontSize: 12 }}>{candidate?.student?.name}</td>
-                            <td style={{ fontSize: 12 }}>{candidate?.student?.email}</td>
-                            <td style={{ fontSize: 12 }}>{moment(candidate?.student?.dob).format("DD-MM-YYYY")}</td>
-                            <td style={{ fontSize: 12 }}>{candidate?.student?.registrationNumber}</td>
-                            <td className="text-capitalize" style={{ fontSize: 12 }}>{candidate?.student?.gender || "--"}</td>
-                            <td>
-                              <Dropdown>
-                                <Dropdown.Toggle
-                                  as={CustomToggle}
-                                  id="dropdown-custom-components"
+                    {
+                      loading ? (
+                        <tr>
+                          <td colSpan={10} className="text-center">
+                            <div className="spinner-border text-primary" role="status">
+                              <span className="visually-hidden">Loading...</span>
+                            </div>
+                          </td>
+                        </tr>
+                      ) :
+                        mappedUsers.map((data: any, index: number) => {
+                          return (
+                            <tr key={index}>
+                              <td className="text-secondary">{index + 1}</td>
+                              <td>
+                                <div className="xrg-text-12 text-primary">
+                                  {data?.student && data?.student.registrationNumber}
+                                </div>
+                                <div className="text-muted xrg-text-10 text-monospace">
+                                  {data?.student && data?.student?.email || 'N/A'}
+                                </div>
+                              </td>
+                              <td className="text-muted xrg-text-10 text-monospace ">
+                                {data?.invigilators && data?.invigilators[0]?.invigilatorEmail || 'N/A'}
+                                <OverlayTrigger
+                                  placement="right-start"
+                                  overlay={
+                                    <Tooltip id={`tooltip-top`}>
+                                      {data?.student && data?.invigilators?.map((invigilator: any) => invigilator?.invigilatorEmail).join(', ')}
+                                    </Tooltip>
+                                  }
                                 >
-                                  <FaEllipsisVertical
-                                    style={{ cursor: "pointer" }}
+                                  <Badge className="ml-2" bg="primary" pill>
+                                    +{data?.invigilators?.length > 0 ? data?.invigilators?.length - 1 : 0}
+                                  </Badge>
+                                  {/* <i className="fa fa-question-circle-o ml-2" aria-hidden="true"></i> */}
+                                </OverlayTrigger>
+                              </td>
+                              <td className="text-center">
+                                <BooleanIcon
+                                  values={{ true: <FaCheck />, false: <FaXmark /> }}
+                                  status={data && data?.studentSubmitForReview}
+                                  size="sm"
+                                />
+                              </td>
+                              <td className="text-center">
+                                <BooleanIcon
+                                  values={{ true: <FaCheck />, false: <FaXmark /> }}
+                                  status={data && data?.invigilatorSubmitForReview}
+                                  size="sm"
+                                />
+                              </td>
+                              <td className="text-center">
+                                <BooleanIcon
+                                  values={{ true: <FaCheck />, false: <FaXmark /> }}
+                                  status={data && data?.completionStatus}
+                                  size="sm"
+                                />
+                              </td>
+                              <td className="text-center">
+                                <BooleanIcon
+                                  values={{ true: <FaCheck />, false: <FaXmark /> }}
+                                  status={data && data?.active}
+                                  size="sm"
+                                />
+                              </td>
+                              <td className='text-nowrap'>
+                                <div>
+                                  {data?.attemptedCount}
+                                  /
+                                  {data?.approvedCount}
+                                  /
+                                  {data?.attemptedButUnapprovedCount}
+                                  /
+                                  {data?.inReviewCount}
+                                </div>
+                              </td>
+                              <td className='text-nowrap'>{data?.certificateStatus || 'N/A'}</td>
+                              <td className="text-center">
+                                <div>
+                                  <BooleanIcon
+                                    values={{ true: <FaUnlock />, false: <FaLock /> }}
+                                    status={data && data.active}
+                                    size="sm"
                                   />
-                                </Dropdown.Toggle>
-                                <Dropdown.Menu>
-                                  <Dropdown.Item
-                                  onClick={() => handleResetMappedStudentPassword(candidate?.student?._id, candidate?.student?.email)}
+                                </div>
+                              </td>
+                              <td>
+                                <Dropdown>
+                                  <Dropdown.Toggle
+                                    as={CustomToggle}
+                                    id="dropdown-custom-components"
                                   >
-                                    <FaKey className="text-info" />
-                                    <span className="text-secondary fs-12 ms-2">
-                                      Reset Password
-                                    </span>
-                                  </Dropdown.Item>
-                                  <Dropdown.Item
-                                  // onClick={() => resetPassword(invigilator?._id)}
-                                  >
-                                    <FaGears className="text-success" />
-                                    <span className="ext-secondary fs-12 ms-2">
-                                      Disabled Users
-                                    </span>
-                                  </Dropdown.Item>
-                                </Dropdown.Menu>
-                              </Dropdown>
-                            </td>
-                          </tr>
-                        );
-                      }) : "No data found"}
+                                    <FaEllipsisVertical
+                                      style={{ cursor: "pointer" }}
+                                    />
+                                  </Dropdown.Toggle>
+                                  <Dropdown.Menu>
+                                    <Dropdown.Item
+                                      onClick={() => handleResetMappedStudentPassword(data?.student?._id, data?.student?.email)}
+                                    >
+                                      <FaKey className="text-info" />
+                                      <span className="text-secondary fs-12 ms-2">
+                                        Reset Password
+                                      </span>
+                                    </Dropdown.Item>
+                                    <Dropdown.Item
+                                      onClick={() => handleDisable(data?._id)}
+                                    >
+                                      {data?.active === true ?
+                                        <>
+                                          <FaLock className="text-danger" />
+                                          <span className="text-secondary fs-12 ms-2">
+                                            Disable User
+                                          </span>
+                                        </> :
+                                        <>
+                                          <FaGears className="text-success" />
+                                          <span className="ext-secondary fs-12 ms-2">
+                                            Enable User
+                                          </span>
+                                        </>
+                                      }
+                                    </Dropdown.Item>
+                                    <Dropdown.Item onClick={() => handleUnmarkCompleted(data?._id)}>
+                                      <FaPlusCircle className="text-info" />
+                                      <span className="text-secondary fs-12 ms-2">
+                                        Unmark Completed
+                                      </span>
+                                    </Dropdown.Item>
+                                  </Dropdown.Menu>
+                                </Dropdown>
+                              </td>
+                            </tr>
+                          );
+                        })}
                   </tbody>
                 </Table>
                 <div className="mt-3">
@@ -393,7 +536,7 @@ await DashboardService.resetMappedStudentPassword(studentId, { email })
         handleClose={() => setShowUploadCandidateModal(false)}
       />
 
-      <ResetPasswordModal 
+      <ResetPasswordModal
         show={showResetPasswordModal}
         handleClose={() => setShowResetPasswordModal(null)}
       />
