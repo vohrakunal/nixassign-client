@@ -8,6 +8,7 @@ import CustomToggle from "../../../components/Menu/CustomMenu";
 import { FaKey } from "react-icons/fa";
 import DropzoneModal from "../../../components/Modal/Dropzone.modal";
 import toast from "react-hot-toast";
+import ResetPasswordModal from "../../../components/Modal/ResetPassword.modal";
 
 export default function Dashboard() {
   const [key, setKey] = useState<any>("all_candidate");
@@ -28,6 +29,7 @@ export default function Dashboard() {
   const [showUploadCandidateModal, setShowUploadCandidateModal] = useState<boolean>(false);
 
   const [selectedStudentId, setSelectedStudentIds] = useState<string[]>([]);
+  const [showResetPasswordModal, setShowResetPasswordModal] = useState<any>(null);
 
   const getExamDetails = async () => {
     await DashboardService.getExamDetails()
@@ -59,7 +61,7 @@ export default function Dashboard() {
       .then((res) => {
         if (res.status === 200) {
           setMappedUsers(res.data.data?.users);
-          setMappedTotalRecords(res.data.totalCount);
+          setMappedTotalRecords(res.data?.data?.totalCount);
         }
       })
       .catch((err) => {
@@ -101,6 +103,7 @@ await DashboardService.resetMappedStudentPassword(studentId, { email })
       .then((res) => {
         if (res.status === 200) {
           toast.success("Password reset successfully.");
+          setShowResetPasswordModal({ email, password: res.data.password });
         }
       })
       .catch((err) => {
@@ -388,6 +391,11 @@ await DashboardService.resetMappedStudentPassword(studentId, { email })
       <DropzoneModal
         show={showUploadCandidateModal}
         handleClose={() => setShowUploadCandidateModal(false)}
+      />
+
+      <ResetPasswordModal 
+        show={showResetPasswordModal}
+        handleClose={() => setShowResetPasswordModal(null)}
       />
     </Container>
   );

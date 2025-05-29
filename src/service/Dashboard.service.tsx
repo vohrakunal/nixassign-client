@@ -29,15 +29,15 @@ export class DashboardService {
     static async getAllMappedUsers(pageNumber: number, pageSize: number) {
         const params = makeParams([
             {
-                index: "pageNumber",
+                index: "page",
                 value: pageNumber
             },
             {
-                index: "pageSize",
+                index: "count",
                 value: pageSize
             },
         ])
-        return await makeRequest(urls.dashboard.getAllMappedUsers + params, RequestMethod.GET)
+        return await makeRequest(urls.dashboard.mappedUsers + params, RequestMethod.GET)
 
     }
 
@@ -58,7 +58,7 @@ export class DashboardService {
     }
 
     static async resetMappedStudentPassword(studentId: any, payload:any) {
-        return await makeRequest(urls.dashboard.resetMappedStudentPassword + "/" + studentId, RequestMethod.PUT, payload);
+        return await makeRequest(urls.dashboard.resetMappedStudentPassword, RequestMethod.PUT, payload);
     }
 
 

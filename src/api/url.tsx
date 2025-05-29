@@ -17,6 +17,7 @@ const urls = {
     getExamDetails: "/client/exam/details",
     getAllUnmappedUsers: "/client/user/unmapped",
     getAllMappedUsers: "/client/getAllMappedUserLean",
+    mappedUsers: "/client/exam/user/mapped",
     uploadZipStudentData: "/client/uploadZipUserData",
     uploadCSVStudentData: "/client/uploadUserCsvData",
     mapSingleStudent: "/client/user/map",
