@@ -10,7 +10,9 @@ const urls = {
     updateInvigilator: "/client/updateInvigilator",
     deleteInvigilator: "/client/deleteInvigilator",
     resetPassword:"/client/invigilator/password/reset",
-    toggleStatus:"/client/invigilator/status" 
+    toggleStatus:"/client/invigilator/status" ,
+    updateAllotment: "/client/update/allottedExams",
+    deleteAllottedExam: "/client/invigilator/exam/remove",
   },
 
   dashboard: {
@@ -24,7 +26,9 @@ const urls = {
     mapMultipleStudents: "/client/user/map-multiple",
     resetMappedStudentPassword: "/client/user/reset-password",
     toggleStudentMapping: "/client/toggleStudentMapping",
-    unMarkCompletedMapping:"/client/unMarkCompletedMapping"
+    unMarkCompletedMapping:"/client/unMarkCompletedMapping",
+    generateCertificate: "/client/certificate/generate",
+    getInvigilatorStats: "/client/exam/invigilator/stats",
   }
 }
 export default urls;

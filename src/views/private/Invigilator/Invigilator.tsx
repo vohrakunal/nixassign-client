@@ -19,16 +19,8 @@ import toast from "react-hot-toast";
 import ResetPasswordModal from "../../../components/Modal/ResetPassword.modal";
 
 export default function Invigilator() {
+
   const navigate = useNavigate();
-
-  const [search, setSearch] = useState("");
-  const [activeTab, setActiveTab] = useState("");
-  const [pageNumber, setPageNumber] = useState<any>(1);
-  const [Total, setTotal] = useState<any>(0);
-  const [pageSize, setPageSize] = useState<any>(10);
-  const [logsData, setLogsData] = useState<any>([]);
-  const [responseLogs, setResponseLogs] = useState<any>("");
-
   const [showAddInvigilatorModal, setShowAddInvigilatorModal] = useState<boolean>(false);
   const [invigilatorIndex, setInvigilatorIndex] = useState<number>(-1);
   const [invigilatorData, setInvigilatorData] = useState<any>(null);
@@ -191,6 +183,15 @@ export default function Invigilator() {
                                   <FaExchangeAlt className="text-secondary" />
                                   <span className="fw-bold text-secondary fs-12 ms-2">
                                     {invigilator?.status === "in-active" ? "Activate" : "Deactivate"}
+                                  </span>
+                                </Dropdown.Item>
+                                <Dropdown.Divider />
+                                <Dropdown.Item
+                                  onClick={() => navigate(`/invigilator/${invigilator?._id}`)}
+                                >
+                                  <FaEye className="text-secondary" />
+                                  <span className="fw-bold text-secondary fs-12 ms-2">
+                                    View Access
                                   </span>
                                 </Dropdown.Item>
                                 <Dropdown.Divider />

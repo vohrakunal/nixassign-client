@@ -3,6 +3,9 @@ import makeUploadRequest from "../api/uploadRequest";
 import urls from "../api/url"
 
 export class DashboardService {
+    static getExamInvigilatorStats() {
+        return makeRequest(urls.dashboard.getInvigilatorStats, RequestMethod.GET);
+    }
     static async getExamDetails() {
         return await makeRequest(urls.dashboard.getExamDetails, RequestMethod.GET)
     }
@@ -26,19 +29,13 @@ export class DashboardService {
 
     }
 
-    static async getAllMappedUsers(pageNumber: number, pageSize: number) {
-        const params = makeParams([
-            {
-                index: "page",
-                value: pageNumber
-            },
-            {
-                index: "count",
-                value: pageSize
-            },
-        ])
+    static async getAllMappedUsers(params: string) {
         return await makeRequest(urls.dashboard.mappedUsers + params, RequestMethod.GET)
 
+    }
+
+    static async getMappedUsersLean(){
+        return await makeRequest(urls.dashboard.getAllMappedUsers, RequestMethod.GET);
     }
 
     static async uploadZipStudentData(payload: any, onUploadProgress?: (progressEvent: ProgressEvent) => void) {
@@ -67,5 +64,9 @@ export class DashboardService {
     
     static async unmarkCompleted(mappingId: string){
         return await makeRequest(urls.dashboard.unMarkCompletedMapping + "/" + mappingId, RequestMethod.PUT);
+    }
+
+    static async generateCertificate(mappingId: string) {
+        return await makeRequest(urls.dashboard.generateCertificate + "/" + mappingId, RequestMethod.GET);
     }
 }

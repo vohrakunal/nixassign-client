@@ -5,30 +5,36 @@ import TablePagination from "../../../components/Pagination/Table.pagination";
 import { DashboardService } from "../../../service/Dashboard.service";
 import moment from "moment";
 import CustomToggle from "../../../components/Menu/CustomMenu";
-import { FaCheck, FaKey, FaLock, FaPlus, FaPlusCircle, FaUnlock } from "react-icons/fa";
+import { FaCheck, FaCheckCircle, FaFileExport, FaKey, FaLock, FaPlus, FaPlusCircle, FaUnlock } from "react-icons/fa";
 import DropzoneModal from "../../../components/Modal/Dropzone.modal";
 import toast from "react-hot-toast";
 import ResetPasswordModal from "../../../components/Modal/ResetPassword.modal";
 import BooleanIcon from "../../../components/BooleanIcon";
+import { CSVLink } from "react-csv";
+import { makeParams } from "../../../api/make.request";
+import FilterModal from "../../../components/Modal/Filter.modal";
 
 export default function Dashboard() {
   const [key, setKey] = useState<any>("all_candidate");
 
   const [examDetails, setExamDetails] = useState<any>();
   const [search, setSearch] = useState<string>("");
+  const [search2, setSearch2] = useState<string>("");
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
   const [totalRecords, setTotalRecords] = useState<number>(0);
-
+  const [showFilterModal, setShowFilterModal] = useState<boolean>(false);
+  const [filterData, setFilterData] = useState<any>({});
   const [mappedPageNumber, setMappedPageNumber] = useState<number>(1);
   const [mappedPageSize, setMappedPageSize] = useState<number>(10);
   const [mappedTotalRecords, setMappedTotalRecords] = useState<number>(0);
+  const [downloadData, setDownloadData] = useState<any>([]);
 
   const [unmappedUsers, setUnmappedUsers] = useState<any>([]);
   const [mappedUsers, setMappedUsers] = useState<any>([]);
 
   const [showUploadCandidateModal, setShowUploadCandidateModal] = useState<boolean>(false);
-
+  const [csvData, setCsvData] = useState<any>([]);
   const [selectedStudentId, setSelectedStudentIds] = useState<string[]>([]);
   const [showResetPasswordModal, setShowResetPasswordModal] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(false);
@@ -62,9 +68,83 @@ export default function Dashboard() {
       });
   }
 
+  const onDownloadClick = async () => {
+    await DashboardService.getAllMappedUsers("")
+      .then((res) => {
+        if (res.status === 200) {
+          setDownloadData(
+            res.data.data.users.map((data: any) => {
+              return {
+                'Mapping Id': data._id,
+                'Registration Number': data?.student?.registrationNumber,
+                Email: data.student?.email || 'N/A',
+                'DOB': moment(data.student && data.student.dob).format('DD-MM-YYYY'),
+                'Membership ID': data.student?.membershipId || 'N/A',
+                'Invigilator': data.student && data.invigilators?.map((invigilator: any) => invigilator?.invigilatorEmail).join(', '),
+                'Student Submission': data.studentSubmitForReview ? 'Yes' : 'No',
+                'Invigilator Submission': data.invigilatorSubmitForReview ? 'Yes' : 'No',
+                'Completed': data.completionStatus ? 'Yes' : 'No',
+                'Certificate Status': data?.certificateStatus,
+                'Attempted': data.attemptedCount,
+                "Approved": data.approvedCount,
+                "Attempted But Unapproved Count": data.attemptedButUnapprovedCount,
+                "In Review": data.inReviewCount,
+              };
+            }),
+          );
+        }
+      })
+      .catch((err) => {
+        toast.error('Unable to fetch User data');
+      });
+  };
+
+  useEffect(() => {
+    onDownloadClick();
+  }, []);
+
   const getAllMappedUsers = async () => {
     setLoading(true);
-    await DashboardService.getAllMappedUsers(mappedPageNumber, mappedPageSize)
+    let params = makeParams([
+      {
+        index: "page",
+        value: search2 === "" ? mappedPageNumber : ""
+      },
+      {
+        index: "count",
+        value: search2 == '' ? mappedPageSize : ""
+      },
+      {
+        index: "searchText",
+        value: search2
+      },
+      {
+        index: "completionStatus",
+        value: filterData?.completionStatus,
+      },
+      {
+        index: "invigilatorSubmitForReview",
+        value: filterData?.invigilatorSubmitForReview,
+      },
+      {
+        index: "studentSubmitForReview",
+        value: filterData?.studentSubmitForReview,
+      },
+      {
+        index: "isGenerated",
+        value: filterData?.isGenerated,
+      },
+      {
+        index: "notGenerated",
+        value: filterData?.notGenerated,
+      },
+      {
+        index: "readyToBeGenerated",
+        value: filterData?.readyToBeGenerated,
+      },
+    ]);
+
+    await DashboardService.getAllMappedUsers(params)
       .then((res) => {
         if (res.status === 200) {
           setMappedUsers(res.data.data?.users);
@@ -77,6 +157,25 @@ export default function Dashboard() {
       .finally(() => {
         setLoading(false);
       });
+  }
+  const getExamInvigilatorStats = async () => {
+    await DashboardService.getExamInvigilatorStats().then((res) => {
+      if (res.status === 200) {
+        setCsvData(res.data.invigilatorsData.map((data: any) => {
+          return {
+            "Email": data?.invigilator?.email,
+            "Name": data?.invigilator?.name,
+            "Status": data?.invigilator?.status,
+            "Total Exam Mapping": data?.totalExamMappings,
+            "Remaining Exam Mapping": data?.totalExamMappings - data?.examMappingsWithCompletionStatus,
+            "Completion Status": data?.examMappingsWithCompletionStatus,
+            "Invigilator Submitted": data?.examMappingsWithInvigilatorSubmitted,
+            "Student Submitted": data?.examMappingsWithStudentSubmitted,
+            "Alloted Exam": data?.invigilator?.allottedExams?.length,
+          }
+        }))
+      }
+    })
   }
 
   const handleMapSingleStudent = async (studentId: string) => {
@@ -147,6 +246,22 @@ export default function Dashboard() {
       });
   }
 
+  async function handleGenerateCertificate(mappingId: string) {
+    toast.promise(
+      DashboardService.generateCertificate(mappingId),
+      {
+        loading: "Generating certificate...",
+        success: (res: any) => {
+          if (res.status === 200) {
+            getAllMappedUsers();
+            return "Certificate generated successfully.";
+          }
+          return "Something went wrong while generating certificate.";
+        },
+        error: (err) => err.response.data || err.response.data.message || "Something went wrong"
+      }
+    )
+  }
 
   const handleSelectAllStudents = () => {
     const student_ids = unmappedUsers.map((user: any) => user._id);
@@ -155,15 +270,20 @@ export default function Dashboard() {
 
 
   useEffect(() => {
-    getAllUnmappedUsers();
+    if (key === "all_candidate") {
+      getAllUnmappedUsers();
+    }
   }, [key, pageNumber, pageSize, search]);
 
   useEffect(() => {
-    getAllMappedUsers();
-  }, [key, mappedPageNumber, mappedPageSize]);
+    if (key !== "all_candidate") {
+      getAllMappedUsers();
+    }
+  }, [key, mappedPageNumber, mappedPageSize, search2]);
 
   useEffect(() => {
     getExamDetails();
+    getExamInvigilatorStats()
   }, [])
 
   return (
@@ -241,6 +361,16 @@ export default function Dashboard() {
             <Card.Title>Settings</Card.Title>
             <div className="d-flex justify-content-end gap-3">
               <Button variant="secondary" onClick={() => setShowUploadCandidateModal(true)}>Upload Candidate CSV</Button>
+              <Button variant="secondary" >
+                <CSVLink
+                  data={csvData}
+                  filename={"Invigilator.csv"}
+                  className="text-decoration-none text-white"
+                  target="_blank"
+                >
+                  Export Invigilator CSV
+                </CSVLink>
+              </Button>
             </div>
           </Card.Body>
         </Card>
@@ -360,7 +490,30 @@ export default function Dashboard() {
                 </div>
               </Tab>
               <Tab eventKey={"mapped_candidate"} title={"Mapped Candidates"}>
-                <Table striped hover>
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                  <Form.Group className="mb-3">
+                    <Form.Control
+                      className="form-control w-100"
+                      type="text"
+                      placeholder="Search..."
+                      value={search2}
+                      onChange={(e) => setSearch2(e.target.value)}
+                    />
+                  </Form.Group>
+                  <div className="d-flex gap-2">
+
+                    {
+                      downloadData && downloadData.length > 0 &&
+                      <CSVLink data={downloadData || []}><span className='btn btn-primary'>Export as CSV</span></CSVLink>
+                    }
+
+                    <Button onClick={() => setShowFilterModal(true)} variant="secondary">
+                      <FaCircleDot className="me-2" />
+                      Filter
+                    </Button>
+                  </div>
+                </div>
+                <Table striped hover responsive >
                   <thead>
                     <tr>
                       <th>Sr. No.</th>
@@ -374,6 +527,7 @@ export default function Dashboard() {
                       <th style={{ fontSize: 10 }}> Attempted / Approved / Attempted but Unapproved / Review</th>
                       <th>Certificate</th>
                       <th className='text-nowrap'>Lock/Un-Lock</th>
+                      <th className='text-nowrap'></th>
                     </tr>
 
                   </thead>
@@ -508,6 +662,12 @@ export default function Dashboard() {
                                         Unmark Completed
                                       </span>
                                     </Dropdown.Item>
+                                    <Dropdown.Item onClick={() => handleGenerateCertificate(data?._id)}>
+                                      <FaCheckCircle className="text-success" />
+                                      <span className="text-secondary fs-12 ms-2">
+                                        Generate Certificate
+                                      </span>
+                                    </Dropdown.Item>
                                   </Dropdown.Menu>
                                 </Dropdown>
                               </td>
@@ -539,6 +699,14 @@ export default function Dashboard() {
       <ResetPasswordModal
         show={showResetPasswordModal}
         handleClose={() => setShowResetPasswordModal(null)}
+      />
+
+      <FilterModal
+        show={showFilterModal}
+        handleClose={() => setShowFilterModal(false)}
+        reload={getAllMappedUsers}
+        filterData={filterData}
+        setFilterData={setFilterData}
       />
     </Container>
   );

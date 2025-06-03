@@ -5,6 +5,7 @@ import { BsFillClipboard2DataFill } from "react-icons/bs";
 import type IRouter from "../interface/IRouter";
 import Dashboard from "../views/private/Dashboard/Dashboard";
 import Invigilator from "../views/private/Invigilator/Invigilator";
+import InvigilatorDetails from "../views/private/Invigilator/InvigilatorDetails";
 
 
 
@@ -23,6 +24,13 @@ const mainRoutes: IRouter[] = [
     path: "invigilator",
     navbarShow: true,
     element: Invigilator,
+    name: "Invigilator",
+    icon: <FaHome size={20} />,
+  },
+  {
+    path: "invigilator/:invigilatorId",
+    navbarShow: false,
+    element: InvigilatorDetails,
     name: "Invigilator",
     icon: <FaHome size={20} />,
   },

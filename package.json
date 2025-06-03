@@ -10,11 +10,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@types/react-csv": "^1.1.10",
     "axios": "^1.9.0",
     "bootstrap": "^5.3.6",
     "moment": "^2.30.1",
     "react": "^19.1.0",
     "react-bootstrap": "^2.10.10",
+    "react-csv": "^2.2.2",
     "react-dom": "^19.1.0",
     "react-dropzone": "^14.3.8",
     "react-hot-toast": "^2.5.2",

@@ -25,7 +25,15 @@ export class InvigilatorService {
         return await makeRequest(`${urls.invigilator.resetPassword}/${id}`, RequestMethod.PUT);
     }
 
-    static async  toggleStatus(id: string) {
-        return await makeRequest(`${urls.invigilator. toggleStatus}/${id}`, RequestMethod.PUT);
+    static async toggleStatus(id: string) {
+        return await makeRequest(`${urls.invigilator.toggleStatus}/${id}`, RequestMethod.PUT);
+    }
+
+    static async updateAllotedExam(invigilatorId: string, payload: any) {
+        return await makeRequest(urls.invigilator.updateAllotment + "/" + invigilatorId, RequestMethod.PUT, payload);
+    }
+
+    static async deleteAllotedExam(invigilatorId: string) {
+        return await makeRequest(`${urls.invigilator.deleteAllottedExam}/${invigilatorId}`, RequestMethod.PUT);
     }
 }

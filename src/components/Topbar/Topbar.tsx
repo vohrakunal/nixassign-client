@@ -16,6 +16,7 @@ export default function Topbar() {
     navigate('/login');
   };
 
+
   return (
     <Navbar expand="lg" className="bg-body-tertiary shadow-sm px-3">
       <Container fluid>
@@ -23,10 +24,10 @@ export default function Topbar() {
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
-            <Nav.Link href="/dashboard" className={getLinkClass('/dashboard')}>
+            <Nav.Link onClick={() => navigate('/dashboard')} className={getLinkClass('/dashboard')}>
               Dashboard
             </Nav.Link>
-            <Nav.Link href="/invigilator" className={getLinkClass('/invigilator')}>
+            <Nav.Link onClick={() => navigate('/invigilator')} className={getLinkClass('/invigilator')}>
               Invigilator
             </Nav.Link>
           </Nav>
